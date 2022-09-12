@@ -1,13 +1,29 @@
+import { useState } from 'react'
+
+import AddIcon from '@mui/icons-material/Add'
+import EditIcon from '@mui/icons-material/Edit'
 import MenuIcon from '@mui/icons-material/Menu'
+import { Fab, TableContainer } from '@mui/material'
 import AppBar from '@mui/material/AppBar'
 import Box from '@mui/material/Box'
 import CssBaseline from '@mui/material/CssBaseline'
 import Drawer from '@mui/material/Drawer'
 import IconButton from '@mui/material/IconButton'
+import Paper from '@mui/material/Paper'
+import Table from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableCell from '@mui/material/TableCell'
+import TableHead from '@mui/material/TableHead'
+import TableRow from '@mui/material/TableRow'
 import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
 
+import { useQuery } from '@redwoodjs/web'
+
 import DrawerMenu from 'src/components/DrawerMenu'
+
+import AddOrder from './AddOrder'
+import EditOrder from './EditOrder'
 
 const drawerWidth = 240
 
@@ -19,6 +35,22 @@ interface Props {
   window?: () => Window
 }
 
+const GET_ALL_ORDERS = gql`
+  query getAllOrders {
+    orders {
+      id
+      productId
+      quantity
+      trackingNumber
+      trackingCompany
+      status
+      product {
+        name
+      }
+    }
+  }
+`
+
 const OrderPage = (props: Props) => {
   const { window } = props
   const [mobileOpen, setMobileOpen] = React.useState(false)
@@ -29,6 +61,17 @@ const OrderPage = (props: Props) => {
 
   const container =
     window !== undefined ? () => window().document.body : undefined
+
+  const [open, setOpen] = useState(false)
+  const handleOpen = () => setOpen(true)
+  const handleClose = () => setOpen(false)
+
+  const [openEditModal, setOpenEditModal] = useState(false)
+  const handleOpenEditModal = () => setOpenEditModal(true)
+  const handleCloseEditModal = () => setOpenEditModal(false)
+  const [editOrderdata, setEditOrderData] = useState(null)
+
+  const { data, loading, error } = useQuery(GET_ALL_ORDERS)
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -102,10 +145,65 @@ const OrderPage = (props: Props) => {
         }}
       >
         <Toolbar />
-        <Typography paragraph>
-          Here is the main page, click something on the left to access the
-          specific page
-        </Typography>
+        {loading && <Box>Loading...</Box>}
+
+        {data && (
+          <TableContainer component={Paper}>
+            <Table aria-label="simple table">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Product Name</TableCell>
+                  <TableCell align="right">Quantity</TableCell>
+                  <TableCell align="right">Tracking Number</TableCell>
+                  <TableCell align="right">Tracking Company</TableCell>
+                  <TableCell align="right">Status</TableCell>
+                  <TableCell align="right">Action</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {data.orders.map((record) => (
+                  <TableRow
+                    key={record.id}
+                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                  >
+                    <TableCell component="th" scope="row">
+                      {record.product.name}
+                    </TableCell>
+                    <TableCell align="right">{record.quantity}</TableCell>
+                    <TableCell align="right">{record.trackingNumber}</TableCell>
+                    <TableCell align="right">
+                      {record.trackingCompany}
+                    </TableCell>
+                    <TableCell align="right">{record.status}</TableCell>
+                    <TableCell align="right">
+                      <IconButton
+                        onClick={() => {
+                          setEditOrderData(record)
+                          handleOpenEditModal()
+                        }}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+        <Fab color="primary" aria-label="add" sx={{ mt: 2 }}>
+          <IconButton onClick={handleOpen}>
+            <AddIcon />
+          </IconButton>
+        </Fab>
+        <AddOrder open={open} handleClose={handleClose} />
+        {editOrderdata && (
+          <EditOrder
+            open={openEditModal}
+            handleClose={handleCloseEditModal}
+            editOrder={editOrderdata}
+          />
+        )}
       </Box>
     </Box>
   )

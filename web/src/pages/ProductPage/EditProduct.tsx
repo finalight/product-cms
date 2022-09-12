@@ -17,11 +17,16 @@ const style = {
   p: 4,
 }
 
-const AddProduct = ({ open, handleClose }) => {
-  const CREATE_PRODUCT = gql`
-    # Increments a back-end counter and gets its resulting value
-    mutation CreateProduct($name: String!, $price: Float!, $stockCount: Int!) {
-      createProduct(
+const EditProduct = ({ open, handleClose, editProduct }) => {
+  const UPDATE_PRODUCT = gql`
+    mutation UpdateProduct(
+      $id: Int!
+      $name: String!
+      $price: Float!
+      $stockCount: Int!
+    ) {
+      updateProduct(
+        id: $id
         input: { name: $name, price: $price, stockCount: $stockCount }
       ) {
         id
@@ -32,12 +37,13 @@ const AddProduct = ({ open, handleClose }) => {
     }
   `
 
-  const [createProductMutation, { data, loading, error }] =
-    useMutation(CREATE_PRODUCT)
+  const [updateProductMutation, { data, loading, error }] =
+    useMutation(UPDATE_PRODUCT)
 
   const onSubmit = (data) => {
-    createProductMutation({
+    updateProductMutation({
       variables: {
+        id: parseInt(data.id),
         name: data.name,
         price: parseFloat(data.price),
         stockCount: parseInt(data.stockCount),
@@ -53,22 +59,27 @@ const AddProduct = ({ open, handleClose }) => {
   return (
     <Modal
       open={open}
-      onClose={handleClose}
+      onClose={() => {
+        handleClose()
+        reset()
+      }}
       aria-labelledby="modal-modal-title"
       aria-describedby="modal-modal-description"
     >
       <Box sx={style}>
         <Typography id="modal-modal-title" variant="h6" component="h2">
-          Add Product
+          Edit Product
         </Typography>
 
         <Stack spacing={2} direction={'column'}>
+          <input {...register('id')} type="hidden" value={editProduct.id} />
           <TextField
             {...register('name')}
             id="standard-helperText"
             label="Name"
             helperText="Name of the product"
             variant="standard"
+            defaultValue={editProduct.name}
           />
           <TextField
             {...register('price')}
@@ -76,6 +87,7 @@ const AddProduct = ({ open, handleClose }) => {
             label="Price"
             helperText="Price of the product"
             variant="standard"
+            defaultValue={editProduct.price}
           />
           <TextField
             {...register('stockCount')}
@@ -83,6 +95,7 @@ const AddProduct = ({ open, handleClose }) => {
             label="Stock Count"
             helperText="Stock quantity of the product"
             variant="standard"
+            defaultValue={editProduct.stockCount}
           />
           <Button variant="contained" onClick={handleSubmit(onSubmit)}>
             Save
@@ -93,4 +106,4 @@ const AddProduct = ({ open, handleClose }) => {
   )
 }
 
-export default AddProduct
+export default EditProduct

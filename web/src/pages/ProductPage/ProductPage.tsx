@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
+import { useLazyQuery } from '@apollo/client'
 import AddIcon from '@mui/icons-material/Add'
+import EditIcon from '@mui/icons-material/Edit'
 import MenuIcon from '@mui/icons-material/Menu'
-import { Fab, TableContainer } from '@mui/material'
+import { Fab, Icon, TableContainer } from '@mui/material'
 import AppBar from '@mui/material/AppBar'
 import Box from '@mui/material/Box'
 import CssBaseline from '@mui/material/CssBaseline'
@@ -20,6 +22,7 @@ import Typography from '@mui/material/Typography'
 import DrawerMenu from 'src/components/DrawerMenu'
 
 import AddProduct from './AddProduct'
+import EditProduct from './EditProduct'
 
 const drawerWidth = 240
 
@@ -34,6 +37,17 @@ interface Props {
 function createData(name: string, price: number, stockCount: number) {
   return { name, price, stockCount }
 }
+
+const GET_ALL_PRODUCTS = gql`
+  query getAllProducts {
+    products {
+      id
+      name
+      price
+      stockCount
+    }
+  }
+`
 
 const ProductPage = (props: Props) => {
   const { window } = props
@@ -57,6 +71,20 @@ const ProductPage = (props: Props) => {
   const [open, setOpen] = useState(false)
   const handleOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
+
+  const [openEditModal, setOpenEditModal] = useState(false)
+  const handleOpenEditModal = () => setOpenEditModal(true)
+  const handleCloseEditModal = () => setOpenEditModal(false)
+  const [editProductData, setEditProductdata] = useState(null)
+
+  const [getAllProducts, { loading, error, data }] =
+    useLazyQuery(GET_ALL_PRODUCTS)
+
+  useEffect(() => {
+    if (!open) {
+      getAllProducts()
+    }
+  }, [getAllProducts, open])
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -130,39 +158,59 @@ const ProductPage = (props: Props) => {
         }}
       >
         <Toolbar />
-        <TableContainer component={Paper}>
-          <Table sx={{ minWidth: 650 }} aria-label="simple table">
-            <TableHead>
-              <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell align="right">Price</TableCell>
-                <TableCell align="right">Stock Count</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {rows.map((row) => (
-                <TableRow
-                  key={row.name}
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                >
-                  <TableCell component="th" scope="row">
-                    {row.name}
-                  </TableCell>
-                  <TableCell align="right">{row.price}</TableCell>
-                  <TableCell align="right">{row.stockCount}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        {loading && <Box>Loading...</Box>}
 
+        {data && (
+          <TableContainer component={Paper}>
+            <Table aria-label="simple table">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Name</TableCell>
+                  <TableCell align="right">Price</TableCell>
+                  <TableCell align="right">Stock Count</TableCell>
+                  <TableCell align="right">Action</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {data.products.map((record) => (
+                  <TableRow
+                    key={record.id}
+                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                  >
+                    <TableCell component="th" scope="row">
+                      {record.name}
+                    </TableCell>
+                    <TableCell align="right">{record.price}</TableCell>
+                    <TableCell align="right">{record.stockCount}</TableCell>
+                    <TableCell align="right">
+                      <IconButton
+                        onClick={() => {
+                          setEditProductdata(record)
+                          handleOpenEditModal()
+                        }}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
         <Fab color="primary" aria-label="add" sx={{ mt: 2 }}>
           <IconButton onClick={handleOpen}>
             <AddIcon />
           </IconButton>
         </Fab>
-
         <AddProduct open={open} handleClose={handleClose} />
+        {editProductData && (
+          <EditProduct
+            open={openEditModal}
+            handleClose={handleCloseEditModal}
+            editProduct={editProductData}
+          />
+        )}
       </Box>
     </Box>
   )
