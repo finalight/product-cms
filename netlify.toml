@@ -1,0 +1,15 @@
+[build.environment]
+ CONTEXT = "production"
+
+[[redirects]]
+  from = "/storybook"
+  to = "/storybook"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/200.html"
+  status = 200
+
+[functions]
+  directory = "api/dist/functions"
