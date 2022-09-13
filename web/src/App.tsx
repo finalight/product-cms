@@ -1,4 +1,3 @@
-import { ApolloLink, HttpLink } from '@apollo/client'
 import { setContext } from '@apollo/client/link/context'
 
 import { FatalErrorBoundary, RedwoodProvider } from '@redwoodjs/web'
@@ -21,14 +20,14 @@ const authLink = setContext((_, { headers }) => {
   }
 })
 
-console.log(process.env.GRAPHQL_URL)
-const httpLink = new HttpLink({ uri: `${process.env.GRAPHQL_URL}` })
-const link: ApolloLink = authLink.concat(httpLink)
+// console.log(process.env.GRAPHQL_URL)
+// const httpLink = new HttpLink({ uri: `${process.env.GRAPHQL_URL}` })
+// const link: ApolloLink = authLink.concat(httpLink)
 
 const App = () => (
   <FatalErrorBoundary page={FatalErrorPage}>
     <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
-      <RedwoodApolloProvider graphQLClientConfig={{ link }}>
+      <RedwoodApolloProvider>
         <Routes />
       </RedwoodApolloProvider>
     </RedwoodProvider>
