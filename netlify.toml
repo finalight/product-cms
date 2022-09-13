@@ -1,5 +1,6 @@
 [build.environment]
- CONTEXT = "production"
+  CONTEXT = "production"
+  GRAPHQL_URL= "/.netlify/functions/graphql"
 
 [[redirects]]
   from = "/storybook"
