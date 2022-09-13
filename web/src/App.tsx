@@ -21,6 +21,7 @@ const authLink = setContext((_, { headers }) => {
   }
 })
 
+console.log(process.env.GRAPHQL_URL)
 const httpLink = new HttpLink({ uri: `${process.env.GRAPHQL_URL}` })
 const link: ApolloLink = authLink.concat(httpLink)
 
